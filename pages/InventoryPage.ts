@@ -1,9 +1,10 @@
+//```typescript
 import { Page, Locator } from "@playwright/test";
 
 export type OrdenProductos =
-  | "az" // Name (A to Z)
-  | "za" // Name (Z to A)
-  | "lohi" // Price (low to high)
+  | "az"    // Name (A to Z)
+  | "za"    // Name (Z to A)
+  | "lohi"  // Price (low to high)
   | "hilo"; // Price (high to low)
 
 export class InventoryPage {
@@ -11,6 +12,7 @@ export class InventoryPage {
   readonly titulo: Locator;
   readonly productos: Locator;
   readonly selectorOrden: Locator;
+  readonly primerProducto: Locator;
   readonly iconoCarrito: Locator;
   readonly contadorCarrito: Locator;
   readonly menuHamburguesa: Locator;
@@ -18,12 +20,27 @@ export class InventoryPage {
 
   constructor(page: Page) {
     this.page = page;
+
     this.titulo = page.getByText("Products", { exact: true });
+
     this.productos = page.locator(".inventory_item");
+
+    // Dropdown "Sort by"
     this.selectorOrden = page.getByTestId("product-sort-container");
+
+    // Primer producto de la lista
+    this.primerProducto = page
+      .locator(".inventory_item")
+      .first();
+
     this.iconoCarrito = page.getByTestId("shopping-cart-link");
+
     this.contadorCarrito = page.getByTestId("shopping-cart-badge");
-    this.menuHamburguesa = page.getByRole("button", { name: "Open Menu" });
+
+    this.menuHamburguesa = page.getByRole("button", {
+      name: "Open Menu",
+    });
+
     this.linkLogout = page.getByTestId("logout-sidebar-link");
   }
 
@@ -33,12 +50,18 @@ export class InventoryPage {
 
   async agregarAlCarrito(nombreProducto: string): Promise<void> {
     const producto = this.productoPorNombre(nombreProducto);
-    await producto.getByRole("button", { name: "Add to cart" }).click();
+
+    await producto
+      .getByRole("button", { name: "Add to cart" })
+      .click();
   }
 
   async quitarDelCarrito(nombreProducto: string): Promise<void> {
     const producto = this.productoPorNombre(nombreProducto);
-    await producto.getByRole("button", { name: "Remove" }).click();
+
+    await producto
+      .getByRole("button", { name: "Remove" })
+      .click();
   }
 
   async ordenarPor(orden: OrdenProductos): Promise<void> {
@@ -58,10 +81,21 @@ export class InventoryPage {
     const textos = await this.page
       .locator(".inventory_item_price")
       .allTextContents();
-    return textos.map((t) => parseFloat(t.replace("$", "")));
+
+    return textos.map((t) =>
+      parseFloat(t.replace("$", ""))
+    );
   }
 
   async obtenerNombres(): Promise<string[]> {
-    return this.page.locator(".inventory_item_name").allTextContents();
+    return this.page
+      .locator(".inventory_item_name")
+      .allTextContents();
+  }
+
+  async obtenerPrimerNombre(): Promise<string> {
+    return await this.primerProducto
+      .locator(".inventory_item_name")
+      .innerText();
   }
 }
