@@ -1,4 +1,4 @@
-//```typescript
+//typescript
 import { Page, Locator } from "@playwright/test";
 
 export type OrdenProductos =
